@@ -5,20 +5,31 @@ the `share` skill.
 
 ## Install
 
-```bash
-/plugin marketplace add git@git.fivepaths.com:fivepaths/fivepaths-claude-plugins.git
-/plugin install fivepaths@fivepaths-plugins
-```
-
-Both are typed in Claude Code, not a terminal. To work on the plugin locally,
-point the marketplace at a clone instead:
+Claude Code only accepts marketplaces from github.com, gitlab.com,
+bitbucket.org and configured GitHub Enterprise hosts, so `git.fivepaths.com`
+cannot be added by URL. Clone it and add the clone as a directory, which the
+marketplace supports natively:
 
 ```bash
-/plugin marketplace add ~/Code/src/fivepaths-claude-plugins
+git clone git@git.fivepaths.com:fivepaths/fivepaths-claude-plugins.git \
+  ~/Code/src/fivepaths-claude-plugins
+claude plugin marketplace add ~/Code/src/fivepaths-claude-plugins
+claude plugin install fivepaths@fivepaths-plugins
 ```
 
-Then one setup step per machine, in a terminal, so the publisher can reach
-Cloudflare Access:
+Those last two also work as `/plugin marketplace add ...` and
+`/plugin install ...` typed inside Claude Code. Use the `claude plugin` command
+line in the desktop app, where `/plugin` is unavailable. Restart the session
+afterwards so the skill loads.
+
+To pick up a change later:
+
+```bash
+git -C ~/Code/src/fivepaths-claude-plugins pull
+claude plugin marketplace update fivepaths-plugins
+```
+
+Then one setup step per machine, so the publisher can reach Cloudflare Access:
 
 ```bash
 brew install cloudflared
@@ -80,7 +91,16 @@ both manifests. The description in the frontmatter is what decides whether
 Claude reaches for the skill, so write it as the sentences a person would
 actually say, not as a summary of the implementation.
 
-Teammates pick up a change with `/plugin marketplace update fivepaths-plugins`.
+Validate before committing, which catches a malformed manifest that would
+otherwise fail silently at install time:
+
+```bash
+claude plugin validate .
+claude plugin validate plugins/fivepaths
+```
+
+Teammates pick up a change with a `git pull` and a marketplace update, as
+under Install.
 
 ## House rules
 

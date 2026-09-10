@@ -1,0 +1,19 @@
+{
+  "name": "fivepaths",
+  "version": "1.0.0",
+  "description": "FivePaths house tooling for Claude Code. Writes documents in the cdn.fivepaths.com design system and publishes them to share.fivepaths.com with per-recipient access, without sending email.",
+  "author": {
+    "name": "FivePaths",
+    "email": "support@fivepaths.com"
+  },
+  "repository": "https://git.fivepaths.com/fivepaths/fivepaths-claude-plugins",
+  "homepage": "https://git.fivepaths.com/fivepaths/fivepaths-claude-plugins",
+  "license": "UNLICENSED",
+  "keywords": [
+    "fivepaths",
+    "share",
+    "design-system",
+    "microsite",
+    "cloudflare"
+  ]
+}

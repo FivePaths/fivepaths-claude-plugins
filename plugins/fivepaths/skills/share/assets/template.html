@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>DOCUMENT TITLE</title>
+<link rel="preconnect" href="https://cdn.fivepaths.com" crossorigin>
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="https://cdn.fivepaths.com/microsite/v3/fonts/overpass-latin-wght-normal.woff2">
+<link rel="stylesheet" href="https://cdn.fivepaths.com/microsite/v3/base-3.4.2.css">
+<!-- Blocking on purpose: it replays the stored colour scheme before first paint. -->
+<script src="https://cdn.fivepaths.com/microsite/v3/theme-1.0.0.js"></script>
+<style>
+  /* Page-local: the light/dark mark swap. Names carry this document's prefix. */
+  body > header { --fp-logo-height: 1.55rem; }
+  body > header > a:first-child .fp-doc-mark-dark { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) body > header > a:first-child .fp-doc-mark-light { display: none; }
+    :root:not([data-theme="light"]) body > header > a:first-child .fp-doc-mark-dark { display: block; }
+  }
+  :root[data-theme="dark"] body > header > a:first-child .fp-doc-mark-light { display: none; }
+  :root[data-theme="dark"] body > header > a:first-child .fp-doc-mark-dark { display: block; }
+  :root[data-theme="light"] body > header > a:first-child .fp-doc-mark-light { display: block; }
+  :root[data-theme="light"] body > header > a:first-child .fp-doc-mark-dark { display: none; }
+</style>
+</head>
+<body>
+<a href="#main">Skip to content</a>
+
+<header>
+  <a href="https://fivepaths.com">
+    <img class="fp-doc-mark-light" src="https://cdn.fivepaths.com/brand/fivepaths/fivepaths-logo.svg" alt="" width="25" height="26">
+    <img class="fp-doc-mark-dark" src="https://cdn.fivepaths.com/brand/fivepaths/fivepaths-logo-white.svg" alt="" width="25" height="26">
+    <span>FivePaths</span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#first">First section</a>
+    <a href="#second">Second section</a>
+    <button type="button">
+      <svg data-scheme="dark" aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg data-scheme="light" aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/></svg>
+      <span data-scheme="dark">Dark theme</span>
+      <span data-scheme="light">Light theme</span>
+    </button>
+  </nav>
+</header>
+
+<main id="main">
+
+<section data-band="hero">
+  <h1>The document's title.</h1>
+  <p>One paragraph saying what this is and what the reader should do with it.</p>
+</section>
+
+<section data-tight>
+  <dl>
+    <dt>Prepared for</dt><dd>Client name</dd>
+    <dt>Date</dt><dd>10 September 2026</dd>
+    <dt>Prepared by</dt><dd>FivePaths</dd>
+  </dl>
+</section>
+
+<section id="first" data-band="alt">
+  <header>
+    <h2>First section</h2>
+    <p>The lead paragraph, sitting right after the heading inside the header.</p>
+  </header>
+  <p>Body copy.</p>
+</section>
+
+<section id="second">
+  <header>
+    <h2>Second section</h2>
+  </header>
+  <p>Body copy.</p>
+</section>
+
+</main>
+
+<footer>
+  <p>
+    <strong>FivePaths</strong>
+    <span>&copy; 2026 FivePaths, LLC</span>
+  </p>
+  <small>
+    <p>Prepared for Client name. Please treat it as confidential.</p>
+    <p>This document conforms to <a href="https://www.w3.org/TR/WCAG22/" target="_blank" rel="noopener">WCAG
+      2.2 Level AAA<span class="visually-hidden"> (opens in a new tab)</span></a>.
+      <a href="https://fivepaths.com">FivePaths</a> takes accessibility seriously. If you find a
+      problem please reach out to <a href="mailto:accessibility@fivepaths.com">accessibility@fivepaths.com</a>.</p>
+  </small>
+</footer>
+
+</body>
+</html>

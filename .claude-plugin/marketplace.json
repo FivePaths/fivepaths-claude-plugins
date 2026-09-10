@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "fivepaths-plugins",
+  "owner": {
+    "name": "FivePaths",
+    "email": "support@fivepaths.com"
+  },
+  "metadata": {
+    "description": "Claude Code plugins for FivePaths staff"
+  },
+  "plugins": [
+    {
+      "name": "fivepaths",
+      "version": "1.0.0",
+      "source": "./plugins/fivepaths",
+      "description": "FivePaths house tooling for Claude Code. Writes documents in the cdn.fivepaths.com design system and publishes them to share.fivepaths.com with per-recipient access.",
+      "category": "productivity"
+    }
+  ]
+}

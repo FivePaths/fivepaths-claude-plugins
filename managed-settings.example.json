@@ -1,0 +1,14 @@
+{
+  "extraKnownMarketplaces": {
+    "fivepaths-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "FivePaths/fivepaths-claude-plugins"
+      },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "fivepaths@fivepaths-plugins": true
+  }
+}

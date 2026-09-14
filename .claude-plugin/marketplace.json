@@ -10,9 +10,9 @@
   "plugins": [
     {
       "name": "fivepaths",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "source": "./plugins/fivepaths",
-      "description": "FivePaths house tooling for Claude Code. Writes documents in the cdn.fivepaths.com design system and publishes them to share.fivepaths.com with per-recipient access.",
+      "description": "FivePaths house tooling for Claude Code. Writes documents in the cdn.fivepaths.com design system and publishes them to share.fivepaths.com with per-recipient access, emailing recipients only when asked.",
       "category": "productivity"
     }
   ]

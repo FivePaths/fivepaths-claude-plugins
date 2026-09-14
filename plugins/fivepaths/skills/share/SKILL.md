@@ -1,115 +1,134 @@
 ---
 name: share
-description: Write a FivePaths-branded HTML document and publish it to share.fivepaths.com with access for named recipients, without emailing anyone. Use when asked to "share X with Y", to send a report, summary, brief, findings, proposal or write-up to a client or colleague, or to put a document on share.fivepaths.com. Builds the page to the cdn.fivepaths.com microsite v3 markup contract and the FivePaths writing rules.
+description: Publish a document to share.fivepaths.com with access for named recipients, and optionally email them from the user's own address. Use when asked to "share X with Y", "send X to Y", "send this to Jun", to deliver a report, summary, brief, findings, proposal or write-up to a client or colleague, or to put a document on share.fivepaths.com. Resolves first names to addresses from the project's contacts and from the portal's own history, and confirms before any email goes out.
 ---
 
-# Share a document with someone
+# Share or send a document
 
-"Share X with Y" means: write X as a single self-contained HTML document in
-the FivePaths design system, publish it to share.fivepaths.com, and grant Y
-access. **No email is sent.** The recipient gets access; you hand the link to
-whoever asked, and they pass it on.
+Two verbs, one pipeline.
+
+- **Share X with Y**: publish X to share.fivepaths.com and grant Y access.
+  **No email is sent.** Hand the link to the user; they pass it on.
+- **Send X to Y** (also "email", "let them know", "notify"): the same, then
+  email Y from the user's own address with the link and an optional message.
+
+Read the request for which one it is. "Share it with Jun and let her know"
+is a send. When it is not clear, share silently and say the notification is
+one flag away; a silent share is easy to follow up, an email is not undone.
 
 Everything this skill needs is bundled with it. `$SKILL` below is
-`${CLAUDE_PLUGIN_ROOT}/skills/share`.
+`${CLAUDE_PLUGIN_ROOT}/skills/share`, and `fp-share.sh` is
+`$SKILL/scripts/fp-share.sh`.
 
-## Resolve the request first
+## 1. Get the document
 
-**X** is the content. It may be a topic to write up, a file to convert, or
-work already in this conversation. If X does not exist yet, write it.
+X must be **one self-contained HTML file** in the FivePaths design system. If
+it already is (the user points at such a file, or one was just produced),
+use it. Otherwise invoke the `document` skill first, on the current file, on
+the work in this conversation, or on the topic, and come back with its
+output.
 
-**Y** is one or more recipients, and it must resolve to email addresses:
+## 2. Resolve the recipients
+
+Y must resolve to email addresses:
 
 - An exact address: `sam@acme.com`
-- A domain wildcard: `*@acme.com`, which admits **anyone** at that domain
+- A domain wildcard: `*@acme.com`, which admits **anyone** at that domain.
+  Only when the user asks for it in those terms; never turn a company name
+  into a wildcard on your own.
 
-Ask before guessing. A company name ("share it with Acme") is not an address.
-Never invent one from a person's name, and never turn a company name into a
-wildcard on your own: say what you would grant and let the user confirm.
+A first name or a role ("Jun", "the client", "Acme's PM") is resolved in this
+order, stopping at the first unambiguous answer:
 
-Stop and ask if the recipients are unresolved. Everything else has a sensible
-default: derive the title from the document, and name the file after it.
+1. **The project.** Look for `CONTACTS.md` at the project root, then a
+   *People* or *Contacts* section in `CLAUDE.md` or `README.md`. The
+   convention is one line per person: `- Jun Park <jun@acme.com>, product
+   lead at Acme`. Read the whole file: the same first name can appear twice.
+2. **The portal.** `fp-share.sh people --query jun` lists the addresses we
+   have already shared with that match, with the share each was last added
+   to. A single match whose last share belongs to this client is the answer.
+   Two matches, or a match from an unrelated client, is not.
+3. **Ask.** Say what you found and what you would grant, and let the user
+   choose. Never construct an address from a name and a domain.
 
-## Write the document
+When the project has no contacts file and you resolved the person from the
+portal or from the user's answer, offer to add a `CONTACTS.md` line so the
+next session does not have to ask.
 
-Read `$SKILL/reference/markup.md` and `$SKILL/reference/voice.md` before
-writing. Start from `$SKILL/assets/template.html`, a working skeleton with the
-head, the skip link, the header and its theme toggle, and the footer already
-correct. Copy it into the working directory; never edit the bundled copy.
+## 3. Confirm before anything is emailed
 
-It must be **one self-contained HTML file**. A share holding a single HTML
-file renders in the browser; add a second file and the reader gets a list of
-downloads instead. So inline the page-local CSS, reference images as absolute
-`https://` URLs or `data:` URIs, and keep the whole file under 25 MB.
+Sharing silently may proceed once the recipients are resolved. Sending may
+not: show the title, the exact recipient addresses, the CC list if any, and
+the message, then wait for a yes. The email goes out From and Reply-To the
+user's own address, and every recipient sees it, so this is the moment to
+catch a wrong Jun.
 
-Two things the design system gives you for free, so do not rebuild them: the
-colour scheme (light and dark, from tokens) and the responsive layout. Write
-tokens, never literal colours.
+Write the message in the user's voice, two or three plain sentences: what
+the document is and what, if anything, they are asked to do with it. No
+greeting line, no sign-off; the notification email carries the name.
 
-Do not link back to share.fivepaths.com or to a sign-in page. The reader is
-already inside the viewer, which supplies its own navigation.
-
-## Check it before publishing
-
-Open the file in the Browser pane and look at it. Confirm the layout holds at
-a narrow width, both colour schemes read correctly, and the console is clean.
-Fix what you find. A document a client will open is worth the look.
-
-## Publish
+## 4. Publish
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/skills/share/scripts/fp-share.sh" publish \
-  --title "Q3 findings" --file report.html --to "sam@acme.com"
+# share: access only, nothing sent
+"$SKILL/scripts/fp-share.sh" publish --title "Q3 findings" --file q3-findings.html --to "jun@acme.com"
+
+# send: access, then one email per recipient from the user's address
+"$SKILL/scripts/fp-share.sh" publish --title "Q3 findings" --file q3-findings.html --to "jun@acme.com" \
+  --notify --message "Here are the Q3 findings we discussed. The fares section is the one to read first." --cc "pm@fivepaths.com"
 ```
 
 It creates the share, uploads the file, publishes the version, and prints the
-URL. Recipients are added at creation and **no notification is sent at any
-step**, which is the point.
+URL, then who was notified if anyone was.
 
-Other commands, for follow-up work:
+Follow-up work on an existing share:
 
 ```bash
-fp-share.sh grant   --share <id> --to "another@acme.com"   # add access, still silent
-fp-share.sh version --share <id> --file report.html --note "Second pass"
+fp-share.sh grant   --share <id> --to "another@acme.com" [--notify --message "..."]   # add access; email only the newcomers if asked
+fp-share.sh version --share <id> --file q3-findings.html --note "Second pass" [--notify --message "..."]
+fp-share.sh notify  --share <id> --message "..." [--to "only@these.com"] [--cc "..."]  # email current recipients about what is already there
 fp-share.sh list    --query "findings"
+fp-share.sh people  --query jun
 ```
 
-`version` publishes a new revision under the same link, so the URL you already
-handed out keeps working.
+`version` publishes a new revision under the same link, so the URL already
+handed out keeps working. Wildcard recipients cannot be emailed; `notify`
+reaches only exact addresses and says so.
 
-## Report back
+## 5. Report back
 
-Give the user the URL, the title, and the exact recipient list that was
-granted. Say that no email went out and that they need to send the link
-themselves. If a wildcard was used, name what it admits.
+Give the URL, the title, and the exact recipients granted. If a wildcard was
+used, name what it admits. If nothing was emailed, say so and that the user
+sends the link themselves. If recipients were emailed, name them and repeat
+the message that went out.
 
 To undo: revoke the share, or remove a recipient, from its page in the admin
-at `https://share.fivepaths.com/admin`.
+at `https://share.fivepaths.com/admin`. The command line cannot revoke or
+delete, by design.
 
-## Setup, once per machine
+## Setup, once per computer
 
-Publishing needs a Cloudflare Access token for `share.fivepaths.com/admin`,
-which means a FivePaths staff account. The script finds the token itself; a
-teammate running this for the first time needs:
+Publishing needs a personal token, which a FivePaths staff member gets by
+approving this computer once in their browser:
 
 ```bash
-brew install cloudflared
-cloudflared access login https://share.fivepaths.com/admin
+"$SKILL/scripts/fp-share.sh" login
 ```
 
-That opens a browser once and caches a token the script reuses and refreshes.
-On Linux, install `cloudflared` from Cloudflare's package repository instead
-of Homebrew; the login step is the same.
+It prints and opens a link at share.fivepaths.com. The browser signs in
+through Cloudflare Access as usual, shows the computer's name, and asks for
+approval; the script collects the token and keeps it in
+`~/.config/fivepaths/share/token`. Nothing else needs installing beyond
+`curl` and `jq`. Tokens last 90 days; when the script reports one as invalid
+or expired, run `login` again. `fp-share.sh logout` revokes the token, and
+every token a person holds is listed under their name in the admin.
 
-The script tells the user exactly this if the token is missing or expired, so
-run it and read the error rather than pre-checking. `FP_SHARE_ACCESS_TOKEN`
-overrides the lookup if a token is supplied another way.
+The script says exactly this when the token is missing or expired, so run the
+command and read the error rather than pre-checking. `FP_SHARE_TOKEN` in the
+environment overrides the stored token.
 
 ## Files
 
 | Path under `$SKILL` | What |
 |---|---|
-| `reference/markup.md` | The v3 markup contract: bands, lists, figures, actions, colour |
-| `reference/voice.md` | The writing rules, and the slop patterns to avoid |
-| `assets/template.html` | A correct empty document to start from |
-| `scripts/fp-share.sh` | Publishing, granting, versioning, listing |
+| `scripts/fp-share.sh` | Login, publishing, granting, versioning, notifying, people lookup, listing |

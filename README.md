@@ -33,6 +33,24 @@ registrations do not collide:
 claude plugin marketplace remove fivepaths-plugins
 ```
 
+### If adding it fails
+
+- **"its network source differs from the one declared for it in settings".**
+  The marketplace is already declared as `fivepaths-plugins` in a settings
+  file (yours, a project's, or managed settings) with the `github` form, and
+  you tried to add it again by a different form, such as pasting the full
+  `https://github.com/...` URL into the desktop app's plugin browser. There is
+  nothing to add: the marketplace is registered, so install the plugin
+  directly with `claude plugin install fivepaths@fivepaths-plugins`, or pick
+  it from the list the browser already shows. If you do add it by hand, use
+  the same `FivePaths/fivepaths-claude-plugins` shorthand everywhere.
+- **A username prompt, "Repository not found", or "Permission denied".** The
+  repository is private and Claude Code fetches it with git, using whatever
+  credentials git has on that machine. Sign in with `gh auth login` and run
+  `gh auth setup-git`, or add an SSH key to your GitHub account, and make sure
+  the account is a member of the FivePaths organisation. The desktop app runs
+  the same git, so the same credentials serve it.
+
 ### Rolling it out to everyone
 
 Two ways, which combine.

@@ -9,7 +9,7 @@ working in.
 ## Install
 
 The marketplace is the private GitHub repository
-`FivePaths/fivepaths-claude-plugins`, mirrored from `git.fivepaths.com`.
+`FivePaths/fivepaths-claude-plugins`, which is its only home.
 Claude Code fetches marketplaces from GitHub with your own git credentials, so
 you need to be a member of the FivePaths GitHub organisation and signed in to
 GitHub on the machine (`gh auth login`, or an SSH key). Then:
@@ -193,7 +193,13 @@ claude plugin validate plugins/fivepaths
 
 Push to `main` on GitHub; teammates pick the change up at the next
 auto-update or with `claude plugin marketplace update fivepaths-plugins`.
-Push to `git.fivepaths.com` as well, which stays the repository of record.
+
+GitHub is the repository of record for this one, and the only place it goes.
+Claude Code installs a marketplace from GitHub with the git credentials you
+already have, and reaching `git.fivepaths.com` the same way takes a setup
+nobody should have to do to get a skill. That is the opposite of the rule for
+the rest of the firm's code, which lives on `git.fivepaths.com`; this
+repository is the exception, and it is deliberate.
 
 ## House rules
 

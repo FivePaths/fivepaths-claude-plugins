@@ -1,8 +1,10 @@
 # FivePaths Claude Code plugins
 
 The house plugin marketplace. One plugin so far, `fivepaths`, which carries
-the `document` and `share` skills: write a FivePaths-branded document, put it
-on share.fivepaths.com for named people, and, when asked, email them.
+the `document`, `share` and `project` skills: write a FivePaths-branded
+document, put it on share.fivepaths.com for named people, and, when asked,
+email them; and fetch the client context for the site repository a session is
+working in.
 
 ## Install
 
@@ -198,3 +200,16 @@ Push to `git.fivepaths.com` as well, which stays the repository of record.
 Anything with the FivePaths name on it follows
 [the writing rules](plugins/fivepaths/skills/document/reference/voice.md),
 documentation here included. No em-dashes, plain words, no throat-clearing.
+
+### `project`
+
+Say "get the project context" in a client site repository, or ask what we
+know about the client. The skill reads `git remote get-url origin`, asks the
+support hub which project that repository belongs to (`resolve_context`), and
+clones the project's context repository from git.fivepaths.com to
+`${XDG_DATA_HOME:-$HOME/.local/share}/fivepaths/project/<slug>` with your own
+git credential. Nothing is written to the site repository, the resolution is
+cached for a day, and the skill refuses to run when `CI` is set. It needs a
+support hub token with the `mcp:read` scope in `FP_HUB_TOKEN` or
+`~/.config/fivepaths/hub/token`; an unregistered repository is reported, with
+the `register_project` call that would fix it, and nothing is created.

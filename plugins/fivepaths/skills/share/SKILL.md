@@ -1,6 +1,6 @@
 ---
 name: share
-description: Publish a document to share.fivepaths.com with access for named recipients, and optionally email them from the user's own address. Use when asked to "share X with Y", "send X to Y", "send this to Jun", to deliver a report, summary, brief, findings, proposal or write-up to a client or colleague, or to put a document on share.fivepaths.com. Resolves first names to addresses from the project's contacts and from the portal's own history, and confirms before any email goes out.
+description: Publish a document to share.fivepaths.com with access for named recipients, and optionally email them from the user's own address, entirely from the session through the Share API and MCP server, never the website. Use when asked to "share X with Y", "send X to Y", "send this to Jun", to deliver a report, summary, brief, findings, proposal or write-up to a client or colleague, to put a document on share.fivepaths.com, or to see, change or nudge the recipients of an existing share. Resolves first names to addresses from the project's contacts and from the portal's own history, and confirms before any email goes out.
 ---
 
 # Share or send a document
@@ -19,6 +19,25 @@ one flag away; a silent share is easy to follow up, an email is not undone.
 Everything this skill needs is bundled with it. `$SKILL` below is
 `${CLAUDE_PLUGIN_ROOT}/skills/share`, and `fp-share.sh` is
 `$SKILL/scripts/fp-share.sh`.
+
+None of it needs the Share website. The whole flow, from an HTML file on disk
+to a link a client can open, runs from the session against
+`https://share.fivepaths.com/api/cli` with a personal token, and follow-up
+on a share can use the `fivepaths-share` MCP server when the session has it
+connected. `$SKILL/reference/api.md` documents both: every endpoint a token
+may call, the exact create, upload and publish sequence, the nine MCP tools,
+and what neither route can do. Read it when a call fails in a way the script
+does not explain, when you need a field the script does not print, or when you
+are working without the script.
+
+**Which route for what.** Publishing a report is always the HTTP API through
+`fp-share.sh`: only it can upload a file, and the MCP server has no tool to
+create a document share. Once a share exists, the MCP tools `get_share`,
+`list_recipients`, `add_recipients`, `remove_recipient`, `notify_recipients`
+and `list_shares` do the follow-up with no shell involved; `fp-share.sh
+show`, `grant`, `notify` and `list` do the same when the server is not
+connected. Both act as the same person and are logged the same way, so pick
+whichever is at hand; never do the same step through both.
 
 ## 1. Get the document
 
@@ -79,7 +98,11 @@ greeting line, no sign-off; the notification email carries the name.
 ```
 
 It creates the share, uploads the file, publishes the version, and prints the
-URL, then who was notified if anyone was.
+URL, then who was notified if anyone was. Under the hood that is three calls:
+`POST /shares`, `PUT /shares/{id}/versions/{vid}/files/{name}`, and
+`POST /shares/{id}/versions/{vid}/finalize`; `reference/api.md` shows them as
+curl for the case where the script is not usable. `--subject` sets the email's
+subject line; it defaults to the title.
 
 Follow-up work on an existing share:
 
@@ -87,9 +110,15 @@ Follow-up work on an existing share:
 fp-share.sh grant   --share <id> --to "another@acme.com" [--notify --message "..."]   # add access; email only the newcomers if asked
 fp-share.sh version --share <id> --file q3-findings.html --note "Second pass" [--notify --message "..."]
 fp-share.sh notify  --share <id> --message "..." [--to "only@these.com"] [--cc "..."]  # email current recipients about what is already there
+fp-share.sh show    --share <id>                 # the share, its URL and its recipients, as JSON
 fp-share.sh list    --query "findings"
 fp-share.sh people  --query jun
 ```
+
+With the `fivepaths-share` MCP server connected, the same follow-up is
+`get_share`, `list_recipients`, `add_recipients` (with `notify` and
+`message` for the newcomers), `notify_recipients` and `list_shares`. A new
+version of the document itself still goes through `fp-share.sh version`.
 
 `version` publishes a new revision under the same link, so the URL already
 handed out keeps working. Wildcard recipients cannot be emailed; `notify`
@@ -118,17 +147,31 @@ approving this computer once in their browser:
 It prints and opens a link at share.fivepaths.com. The browser signs in
 through Cloudflare Access as usual, shows the computer's name, and asks for
 approval; the script collects the token and keeps it in
-`~/.config/fivepaths/share/token`. Nothing else needs installing beyond
-`curl` and `jq`. Tokens last 90 days; when the script reports one as invalid
-or expired, run `login` again. `fp-share.sh logout` revokes the token, and
-every token a person holds is listed under their name in the admin.
+`~/.config/fivepaths/share-token` (an older install's
+`~/.config/fivepaths/share/token` is still read). Nothing else needs
+installing beyond `curl` and `jq`. Tokens last 90 days; when the script
+reports one as invalid or expired, run `login` again. `fp-share.sh logout`
+revokes the token, and every token a person holds is listed under their name
+in the admin.
 
 The script says exactly this when the token is missing or expired, so run the
-command and read the error rather than pre-checking. `FP_SHARE_TOKEN` in the
-environment overrides the stored token.
+command and read the error rather than pre-checking. `FP_SHARE_TOKEN` or
+`FPS_TOKEN` in the environment overrides the stored token.
+
+The same token connects the MCP server, once per machine:
+
+```bash
+claude mcp add --transport http fivepaths-share https://share.fivepaths.com/mcp \
+  --header "Authorization: Bearer $(cat ~/.config/fivepaths/share-token)"
+```
+
+Optional: the skill works without it. When the token is renewed, the
+registration keeps the old header and starts answering 401, so remove and add
+the server again. `reference/api.md` has the `.mcp.json` form for a project.
 
 ## Files
 
 | Path under `$SKILL` | What |
 |---|---|
-| `scripts/fp-share.sh` | Login, publishing, granting, versioning, notifying, people lookup, listing |
+| `scripts/fp-share.sh` | Login, publishing, granting, versioning, notifying, people lookup, listing, reading a share back |
+| `reference/api.md` | The `/api/cli` endpoints a token may call, the publish sequence as curl, the MCP server and its nine tools, and what stays browser-only |

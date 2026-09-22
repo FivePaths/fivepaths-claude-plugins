@@ -53,6 +53,33 @@ claude plugin marketplace remove fivepaths-plugins
   the account is a member of the FivePaths organisation. The desktop app runs
   the same git, so the same credentials serve it.
 
+### Connecting to share.fivepaths.com
+
+The `share` skill publishes through the Share API with a personal token,
+which a staff member mints once per machine by approving it in their browser:
+
+```bash
+fp-share.sh login
+```
+
+The script is `skills/share/scripts/fp-share.sh` inside the installed plugin;
+the simplest way to run it is to ask Claude, in a session with the plugin
+loaded, to run `fp-share.sh login` from the share skill. The token lands
+in `~/.config/fivepaths/share-token`, lasts 90 days, and is revoked at
+`https://share.fivepaths.com/admin/tokens`. With it, a session writes a
+report, creates the share, uploads and publishes it, and hands back the link
+without anyone opening the Share website.
+
+The same token connects Share's MCP server, which is optional and adds tools
+for follow-up on existing shares and for client websites:
+
+```bash
+claude mcp add --transport http fivepaths-share https://share.fivepaths.com/mcp --header "Authorization: Bearer $(cat ~/.config/fivepaths/share-token)"
+```
+
+What a token can and cannot do, every endpoint, and the tool list are in
+[`plugins/fivepaths/skills/share/reference/api.md`](plugins/fivepaths/skills/share/reference/api.md).
+
 ### Rolling it out to everyone
 
 Two ways, which combine.

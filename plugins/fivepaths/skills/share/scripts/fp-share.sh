@@ -4,6 +4,7 @@
 #   fp-share.sh login   [--label "this computer"]      # authorise this computer once, in the browser
 #   fp-share.sh publish --title "Q3 findings" --file report.html --to "a@x.com, *@y.com" [--notify [--message M] [--cc C] [--subject S]]
 #   fp-share.sh version --share ABC123 --file report.html [--note "Second pass"] [--notify [--message M] [--cc C] [--subject S]]
+#   fp-share.sh replace --share ABC123 --file report.html [--filename NAME]  # overwrite it in the latest version; never emails
 #   fp-share.sh grant   --share ABC123 --to "b@x.com" [--notify [--message M] [--cc C] [--subject S]]
 #   fp-share.sh notify  --share ABC123 [--message M] [--cc C] [--subject S] [--to "only@these.com"]
 #   fp-share.sh show    --share ABC123                 # the share, its URL and its recipients (JSON)
@@ -11,9 +12,9 @@
 #   fp-share.sh list    [--query text]
 #   fp-share.sh whoami | logout
 #
-# Nothing is emailed unless --notify is given (or the command is `notify`). Notifications go out
-# from the address of the staff member who authorised this computer; the subject defaults to the
-# share's title.
+# Nothing is emailed unless --notify is given (or the command is `notify`); `replace` never emails.
+# Notifications go out from the address of the staff member who authorised this computer; the
+# subject defaults to the share's title.
 #
 # Auth: a personal token minted by `login`, kept in $XDG_CONFIG_HOME/fivepaths/share-token
 # (mode 600), the same file the MCP server's `claude mcp add` header reads and share-site.sh uses.
@@ -115,7 +116,7 @@ report_notified() {
 }
 
 upload() {
-  # upload SHARE_ID VERSION_ID FILE [FILENAME]
+  # upload SHARE_ID VERSION_ID|latest FILE [FILENAME] : prints the JSON payload
   local id="$1" vid="$2" file="$3" name="${4:-}"
   [ -f "$file" ] || die "no such file: $file"
   [ -n "$name" ] || name="$(basename "$file")"
@@ -130,6 +131,7 @@ upload() {
     --data-binary "@$file" -w '\n%{http_code}')" || die "upload failed: $name"
   code="${out##*$'\n'}"; payload="${out%$'\n'*}"
   check "$code" "$payload" "upload $name"
+  printf '%s' "$payload"
 }
 
 open_url() {
@@ -220,7 +222,7 @@ cmd_publish() {
   created="$(request POST /shares "$(json --arg t "$title" --arg r "$to" '{title:$t,recipients:$r}')")"
   id="$(printf '%s' "$created" | jq -r '.id')"
   vid="$(printf '%s' "$created" | jq -r '.version_id')"
-  for f in "${files[@]}"; do upload "$id" "$vid" "$f" "$name"; done
+  for f in "${files[@]}"; do upload "$id" "$vid" "$f" "$name" >/dev/null; done
   fin="$(request POST "/shares/$id/versions/$vid/finalize" "$(notify_body)")"
   printf '%s/%s\n' "$BASE" "$id"
   report_notified "$fin"
@@ -247,10 +249,31 @@ cmd_version() {
   local v vid f fin
   v="$(request POST "/shares/$id/versions" "$(json --arg n "$note" '{note:$n}')")"
   vid="$(printf '%s' "$v" | jq -r '.version_id')"
-  for f in "${files[@]}"; do upload "$id" "$vid" "$f" "$name"; done
+  for f in "${files[@]}"; do upload "$id" "$vid" "$f" "$name" >/dev/null; done
   fin="$(request POST "/shares/$id/versions/$vid/finalize" "$(notify_body)")"
   printf '%s/%s\n' "$BASE" "$id"
   report_notified "$fin"
+}
+
+# A correction, not a revision: the file already in the latest published version is overwritten in
+# place, so the version number and the link stay and nobody is emailed. The name must match a file
+# in that version (the local file's name unless --filename says otherwise).
+cmd_replace() {
+  local id="" file="" name=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --share) id="$2"; shift 2 ;;
+      --file) [ -z "$file" ] || die "replace takes one --file."; file="$2"; shift 2 ;;
+      --filename) name="$2"; shift 2 ;;
+      *) die "unknown option: $1" ;;
+    esac
+  done
+  [ -n "$id" ] || die "--share is required."
+  [ -n "$file" ] || die "--file is required."
+  local res
+  res="$(upload "$id" latest "$file" "$name")"
+  printf '%s' "$res" | jq -r '.url'
+  printf '%s' "$res" | jq -r '"replaced \(.file.filename) in version \(.version_no) (\(.file.size) bytes); no email sent"' >&2
 }
 
 cmd_grant() {
@@ -346,6 +369,7 @@ case "${1:-}" in
   whoami)  shift; cmd_whoami "$@" ;;
   publish) shift; cmd_publish "$@" ;;
   version) shift; cmd_version "$@" ;;
+  replace) shift; cmd_replace "$@" ;;
   grant)   shift; cmd_grant "$@" ;;
   notify)  shift; cmd_notify "$@" ;;
   show)    shift; cmd_show "$@" ;;

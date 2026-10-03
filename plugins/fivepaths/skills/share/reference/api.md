@@ -11,7 +11,7 @@ There are two ways in, and one report needs both or either:
 
 | Route | What it can do | When to use it |
 |---|---|---|
-| **The command-line API**, `POST /api/cli/...`, wrapped by `fp-share.sh` | Create a document share, upload files, publish a version, rename, grant and remove access, notify, look up people, read a share back | **Publishing a report.** This is the only route that uploads a file. |
+| **The command-line API**, `POST /api/cli/...`, wrapped by `fp-share.sh` | Create a document share, upload files, publish a version, correct a file in the latest version, rename, grant and remove access, notify, look up people, read a share back | **Publishing a report.** This is the only route that uploads a file. |
 | **The MCP server**, `POST /mcp` | List shares, read one share and its recipients, add and remove recipients, notify, register a client website and print its gate configuration | Follow-up on a share that already exists, and website shares. It cannot create a document share or upload anything. |
 
 Both run the same admin handlers with the same allowlist, so neither can do
@@ -75,6 +75,33 @@ owner's address, the subject defaults to the share title, and `notified.sent`
 lists who got it. Wildcard recipients cannot be emailed and are simply not in
 `sent`.
 
+### Correcting the latest version without a new one
+
+For a typo or a one-line fix that readers need not see as a new revision,
+overwrite the file in the latest published version instead. This is what
+`fp-share.sh replace` runs:
+
+```bash
+curl -sS -X PUT "$B/shares/$ID/versions/latest/files/q3-findings.html" "${H[@]}" --data-binary @q3-findings.html
+# {"ok":true,"url":"https://share.fivepaths.com/Cp5CwSfK4FFz","version_no":3,"replaced_at":1791000000000,"file":{"filename":"q3-findings.html","size":48390,...}}
+```
+
+- The version number, the link, the publish date and the storage key stay
+  the same. Readers get the new file on their next load: the file routes send
+  `Cache-Control: private, no-store`.
+- **Nothing is emailed**, ever. Send a `notify` afterwards if someone should
+  hear about the fix.
+- The filename must be one the version already has; another name answers 404
+  with the version's files listed (and in `files`). No file is added or
+  removed. Only the **latest published** version can be corrected; older
+  versions stay as they were published.
+- Refused with 409 when nothing is published yet (finalize the draft
+  instead), when the share is revoked, and for a website or a file request.
+  Same 25 MB limit as an upload.
+- The previous bytes are discarded. The share page shows "replaced … by …"
+  on the version, and Activity logs a `version.replaced` event with the
+  filename, the old and new size, and who did it.
+
 ### Everything a token may call
 
 `/api/cli/<path>` is `/api/admin/<path>` run as the token's owner, for exactly
@@ -87,7 +114,8 @@ these. Anything else answers 403 `Not available from the command line.`
 | GET | `/shares/:id` | → `{share: {..., url}}` with counts and where a client opens it |
 | PATCH | `/shares/:id` | `{title}` renames; `{hostname}` moves a website; `{notes}` changes a request's instructions |
 | POST | `/shares/:id/versions` | `{note}` → `{version_id, version_no}`: a new draft under the same link |
-| PUT | `/shares/:id/versions/:vid/files/:filename` | raw body, up to 25 MB, `Content-Length` required → `{file}` |
+| PUT | `/shares/:id/versions/:vid/files/:filename` | raw body, up to 25 MB, `Content-Length` required → `{file}`; a draft only |
+| PUT | `/shares/:id/versions/latest/files/:filename` | raw body, same limit → `{url, version_no, replaced_at, file}`: overwrite a file already in the latest published version, same version number, no email |
 | DELETE | `/shares/:id/versions/:vid/files/:filename` | remove a draft file |
 | DELETE | `/shares/:id/versions/:vid` | discard a draft |
 | POST | `/shares/:id/versions/:vid/finalize` | `{notify, message, cc, subject}` → `{url, version_no, notified}` |
@@ -102,7 +130,8 @@ Share ids are twelve characters from a base-58 alphabet. Every response is
 JSON with `ok`; failures carry `error` with a sentence meant to be shown.
 Status codes: 400 bad input, 401 token problem, 403 not allowed from the
 command line or missing `X-Requested-With`, 404 no such share, 409 conflict
-(a hostname in use, a version already published), 413 file too large, 429
+(a hostname in use, a version already published, a replace on a share with
+nothing published, a revoked share, a website or a request), 413 file too large, 429
 too many login attempts.
 
 ## The MCP server

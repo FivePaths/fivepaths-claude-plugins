@@ -109,6 +109,7 @@ Follow-up work on an existing share:
 ```bash
 fp-share.sh grant   --share <id> --to "another@acme.com" [--notify --message "..."]   # add access; email only the newcomers if asked
 fp-share.sh version --share <id> --file q3-findings.html --note "Second pass" [--notify --message "..."]
+fp-share.sh replace --share <id> --file q3-findings.html   # fix the latest version in place; same version number, never emails
 fp-share.sh notify  --share <id> --message "..." [--to "only@these.com"] [--cc "..."]  # email current recipients about what is already there
 fp-share.sh show    --share <id>                 # the share, its URL and its recipients, as JSON
 fp-share.sh list    --query "findings"
@@ -118,11 +119,32 @@ fp-share.sh people  --query jun
 With the `fivepaths-share` MCP server connected, the same follow-up is
 `get_share`, `list_recipients`, `add_recipients` (with `notify` and
 `message` for the newcomers), `notify_recipients` and `list_shares`. A new
-version of the document itself still goes through `fp-share.sh version`.
+version of the document, or a correction to it, still goes through
+`fp-share.sh version` or `replace`.
 
 `version` publishes a new revision under the same link, so the URL already
 handed out keeps working. Wildcard recipients cannot be emailed; `notify`
 reaches only exact addresses and says so.
+
+**`replace` or `version`.** Both keep the link. Choose by what readers should
+see:
+
+- **`replace`** for small corrections: a typo, a wrong figure, a broken link,
+  a line the user calls "just a fix", or whenever they say "no new revision",
+  "don't bump the version" or "just update it". It overwrites the file in the
+  latest published version, keeps its number, and never emails. The local
+  file's name must match the one in the version (`--filename` names it when
+  it does not; `show` gives the share, and the error lists the version's
+  files).
+- **`version`** for substantive changes readers should see as a new version:
+  new sections, revised findings or recommendations, anything a reader who
+  already opened it ought to know changed, and whenever the user asks for a
+  new version or wants recipients told. Its `--note` and `--notify` say what
+  changed.
+
+When it is unclear, ask; a needless new version is noise, a silent change
+to findings someone has already read is worse. After a `replace`, report
+the URL and that the version number is unchanged and nothing was sent.
 
 ## 5. Report back
 
@@ -173,5 +195,5 @@ the server again. `reference/api.md` has the `.mcp.json` form for a project.
 
 | Path under `$SKILL` | What |
 |---|---|
-| `scripts/fp-share.sh` | Login, publishing, granting, versioning, notifying, people lookup, listing, reading a share back |
+| `scripts/fp-share.sh` | Login, publishing, granting, versioning, correcting the latest version in place, notifying, people lookup, listing, reading a share back |
 | `reference/api.md` | The `/api/cli` endpoints a token may call, the publish sequence as curl, the MCP server and its nine tools, and what stays browser-only |

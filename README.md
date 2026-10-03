@@ -176,6 +176,7 @@ fp-share.sh publish --title "Q3 findings" --file report.html --to "sam@acme.com"
 fp-share.sh publish --title "Q3 findings" --file report.html --to "sam@acme.com" --notify --message "Here it is." --cc "pm@fivepaths.com"
 fp-share.sh grant   --share <id> --to "another@acme.com"
 fp-share.sh version --share <id> --file report.html --note "Second pass"
+fp-share.sh replace --share <id> --file report.html      # fix the latest version in place, no email
 fp-share.sh notify  --share <id> --message "The fares section changed."
 fp-share.sh people  --query jun
 fp-share.sh list    --query findings

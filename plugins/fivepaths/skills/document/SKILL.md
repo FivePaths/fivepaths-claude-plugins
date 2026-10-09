@@ -35,6 +35,21 @@ writing. Start from `$SKILL/assets/template.html`, a working skeleton with the
 head, the skip link, the header and its theme toggle, and the footer already
 correct. Copy it; never edit the bundled copy.
 
+**Pin the current release, not the bundled one.** The template pins the
+release that was current when this skill was last published, and the CDN
+moves faster than the skill. Before writing, read the live release:
+
+```bash
+curl -s https://cdn.fivepaths.com/microsite/v3/ | grep -o 'The current release is [0-9.]*'
+curl -s https://cdn.fivepaths.com/microsite/v3/ | grep -o 'fonts/overpass-latin-wght-normal[^"]*\.woff2' | head -1
+```
+
+Put that release in the stylesheet link and that font file in the preload.
+Pinning still matters: a published release never changes, so the document
+keeps the sheet it was checked against. If the live release is a new major
+(`v4`) rather than a newer 3.x, stop and say so; the bundled contract only
+covers v3. If the page cannot be reached, keep the template's pin.
+
 Rules that come from where the file ends up:
 
 - **One file.** Inline the page-local CSS, reference images as absolute

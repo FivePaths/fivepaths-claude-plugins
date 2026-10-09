@@ -22,12 +22,22 @@ Do not invent class names. If a document genuinely needs one, prefix it
 ## Head
 
 Pin the release. A published release is immutable, so a pinned file never
-changes underneath the document.
+changes underneath the document. Pin the **current** release, which the live
+reference page names in the sentence "The current release is …" (SKILL.md
+shows the one-line check); 3.6.1 was current when this copy was written. Since
+3.5.0 the font file is `overpass-latin-wght-normal-2.woff2`, so the preload
+names that file.
 
 ```html
-<link rel="stylesheet" href="https://cdn.fivepaths.com/microsite/v3/base-3.4.2.css">
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="https://cdn.fivepaths.com/microsite/v3/fonts/overpass-latin-wght-normal-2.woff2">
+<link rel="stylesheet" href="https://cdn.fivepaths.com/microsite/v3/base-3.6.1.css">
 <script src="https://cdn.fivepaths.com/microsite/v3/theme-1.0.0.js"></script>
 ```
+
+Since 3.6.1 the header toggle shows its icon alone. Keep both text spans in
+the button: the sheet clips them the way `visually-hidden` does, and they
+remain its accessible name.
 
 `theme-1.0.0.js` is blocking in `<head>` on purpose: it replays the reader's
 stored colour scheme before first paint. It binds any `body > header button`
@@ -88,6 +98,8 @@ outside the `header` gets no lead styling.
 | `<ol>` in `main` | numbered in a ring |
 | `<ol data-list="steps">` | the numbered grid |
 | `<ul data-list="cards" data-cols="3">` | the card grid |
+| `<ul data-list="chips">` | short identifiers as chips: tags, module names, a jump list |
+| `<ul data-list="logos">` | a logo row |
 
 When a whole card is a link, the link is the item's only child, so the target
 is the card rather than the words in it:
@@ -111,6 +123,7 @@ is the card rather than the words in it:
 | Markup | Is |
 |---|---|
 | `<div data-layout="split">` | equal panels, each child a panel |
+| `<div data-layout="split" data-frame="none">` | two balanced columns without panels, for two halves of one thought, such as document metadata side by side |
 | `<div data-layout="feature">` | two columns, copy then media |
 | `<div data-layout="feature flip">` | media first |
 | `<div data-layout="feature uneven">` | 5fr to 7fr |
@@ -167,6 +180,7 @@ The reader reached the page through Share, so do not link back to it.
 | `<dl>` | a definition list, good for document metadata |
 | `<small>` | fine print |
 | `<span data-chip>` | a small badge |
+| `<a data-target>` | a standalone link in `main`, given the 44px target |
 | `<code>`, `<pre>` | inline and block code |
 | `body > a:first-child` | the skip link |
 | `body > header` | brand first (an `a`), then `nav` |
@@ -178,6 +192,15 @@ The reader reached the page through Share, so do not link back to it.
   <p>The figures cover January to June only.</p>
 </aside>
 ```
+
+## Forms and pagers
+
+Since 3.6.0 the sheet styles a form that opts in with
+`form[data-layout="stack"]` or `form[data-layout="filters"]`, with errors in
+`--fp-critical`, and a pager as `nav > ul[data-list="chips"]` with
+`aria-current="page"`. A shared document rarely needs either; when one does,
+follow the live contract at <https://cdn.fivepaths.com/microsite/v3/>. A form
+without `data-layout` is left unstyled.
 
 ## Colour
 
@@ -195,7 +218,7 @@ dark-band remap. Every pairing in the sheet clears WCAG AAA; keep it that way.
 
 ## Checklist
 
-- Pinned `base-3.4.2.css`, the font preload, and `theme-1.0.0.js` in `<head>`
+- The current release pinned (3.6.1 or newer within v3), the `-2` font preload, and `theme-1.0.0.js` in `<head>`
 - A skip link as `body`'s first child, and `<main id="main">`
 - One `h1`, in the hero band; headings descend without skipping a level
 - Every table wrapped in a `figure`

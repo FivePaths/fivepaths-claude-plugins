@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "fivepaths",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "source": "./plugins/fivepaths",
       "description": "FivePaths house tooling for Claude Code. Writes documents in the cdn.fivepaths.com design system and publishes them to share.fivepaths.com with per-recipient access through the Share API and MCP server, emailing recipients only when asked, without opening the Share website. Fetches a client project’s context repository for the site repository a session is working in, resolved through the support hub.",
       "category": "productivity"
